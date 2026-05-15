@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html
+    xmlns="http://www.w3.org/1999/xhtml"
+    xml:lang="en-us"
+    lang="en-us">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="application/xhtml+xml"/>
+    <meta name="description" content="What?"/>
+    <meta name="author" content="Beu"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Sudoku</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"/>
+
+    <style type="text/css">
+/* <![CDATA[ */
+
+body {
+    margin: 16px;
+    line-height: 100%;
+}
+
+/* to be easy to calculate sizes */
+.cells-container *, .cells-container *::before, cells-container *::after {
+    box-sizing: border-box;
+}
+div.cells-container {
+    display: grid;
+    grid-template-columns: repeat(9, 60px);
+    grid-template-rows: repeat(9, 60px);
+    border: 2px solid black;
+    width: fit-content;
+}
+
+div.cell {
+    position: relative;  /* to numbers be absolute */
+    border: 1px solid #ccc;
+    width: 60px;
+    height: 60px;
+}
+
+div.cell:nth-child(3n) {
+    border-right: 2px solid black;
+}
+div.cell:nth-child(9n) {
+    border-right: 1px solid #ccc;
+}
+div.cell:nth-child(n+19):nth-child(-n+27),
+div.cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 2px solid black;
+}
+
+div.number {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;  /* upper than notes (z-index: 1) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    font-family: monospace;
+    background-color: white;  /* hide lower notes */
+}
+
+div.number:empty {
+    background-color: transparent;  /* notes will be appeared when number is empty */
+    pointer-events: none;  /* eneasy to click notes */
+}
+
+div.notes-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+div.note {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-family: monospace;
+    color: #666;
+}
+
+
+/* ]]> */
+    </style>
+
+    <script type="application/javascript">
+/* <![CDATA[ */
+
+// @ts-check
+
+/** @type {() => void} */
+function onLoad() {
+    const controller = new SudokuController(3);
+
+    controller.view.iniialize();
+}
+
+
+class SudokuController {
+
+    /**
+     * @param {number} sqrt_n
+     */
+    constructor(sqrt_n) {
+        this.sqrt_n = sqrt_n;
+        this.n = sqrt_n * sqrt_n;
+        this.model = new SudokuModel(this);
+        this.view = new SudokuView(this);
+    }
+}
+
+
+class SudokuView {
+    /**
+     * @param {SudokuController} controller
+     */
+    constructor(controller) {
+        this.controller = controller;
+        this.sqrt_n = controller.sqrt_n;
+        this.n = controller.n;
+    }
+
+    /** @type {(element: HTMLElement) => void} */
+    removeAllChildren(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+
+    /** @type {() => void} */
+    iniialize() {
+        const main = document.getElementById("main");
+        if (main == null) {
+            throw new Error();
+        }
+        const cells_container_div = document.createElement("div");
+        cells_container_div.classList.add("cells-container");
+        cells_container_div.id = "cells-container";
+
+        for (let i = 0;  i < 9 * 9;  ++i) {
+            const r = Math.floor(i / 9);
+            const c = i % 9;
+
+            const cell_div = document.createElement("div");
+            cell_div.classList.add("cell");
+            cell_div.id = `cell-${r}-${c}`;
+
+            const number_div = document.createElement("div");
+            number_div.classList.add("number");
+            number_div.id = `number-${r}-${c}`;
+
+            //number_div.appendChild(document.createTextNode(`${c + 1}`));
+
+            const notes_container_div = document.createElement("div");
+            notes_container_div.classList.add("notes-container");
+            notes_container_div.id = `notes-container-${r}-${c}`;
+
+            for (let j = 1;  j <= 9;  ++j) {
+                const note_div = document.createElement("div");
+                note_div.classList.add("note");
+                note_div.id = `note-${r}-${c}-${j}`;
+
+                //note_div.appendChild(document.createTextNode(`${j}`));
+
+                notes_container_div.appendChild(note_div);
+            }
+
+            cell_div.appendChild(number_div);
+            cell_div.appendChild(notes_container_div);
+
+            cells_container_div.appendChild(cell_div);
+        }
+        this.removeAllChildren(main);
+        main.appendChild(cells_container_div);
+    }
+}
+
+
+class SudokuModel {
+    /**
+     * @param {SudokuController} controller
+     */
+    constructor(controller) {
+        this.controller = controller;
+        this.sqrt_n = controller.sqrt_n;
+        this.n = controller.n;
+    }
+}
+
+
+/* ]]> */
+    </script>
+
+  </head>
+
+  <body onload="onLoad();">
+
+    <main id="main"></main>
+
+    <nav>
+      <button>Undo</button>
+      <button>Erase</button>
+      <button>Auto Notes</button>
+      <button>Notes</button>
+      <button>Hint</button>
+    </nav>
+  </body>
+
+  </html>
+
